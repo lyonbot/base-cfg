@@ -31,7 +31,7 @@ declare interface NodeRequire {
 
 declare module 'worker-loader!*' {
   class WebpackWorker extends Worker {
-    constructor();
+    constructor(options?: WorkerOptions);
   }
 
   export default WebpackWorker;
