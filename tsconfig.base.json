@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "esnext",
+    "jsx": "react",
+    "strictNullChecks": true,
+    "moduleResolution": "node",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "importHelpers": true,
+    "sourceMap": true,
+    "skipDefaultLibCheck": true,
+    // "outDir": "dist",
+    // "baseUrl": "src",
+    // "paths": {
+      // "~/*": [ "./*" ],
+      // "~packages/*": [ "../../*" ],
+    // },
+  },
+}

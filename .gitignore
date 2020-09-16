@@ -1,0 +1,13 @@
+.vscode
+.nyc_output
+reports
+node_modules
+dist/
+test/.config.js
+build
+d.js
+sample
+uploads
+static/
+.DS_Store
+package-lock.json

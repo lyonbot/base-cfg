@@ -1,0 +1,15 @@
+{
+  "extends": "./node_modules/@lyonbot/base-cfg/tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "baseUrl": "src",
+    "paths": {
+      "~/*": [ "./*" ],
+    },
+  },
+  "include": [
+    "./node_modules/@lyonbot/base-cfg/*.d.ts",
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+  ]
+}
