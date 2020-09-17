@@ -109,6 +109,7 @@ function makeConfigChain({
       .after('TS')
       .test(/\.worker\.tsx?$/)
       .use('worker').loader('worker-loader').options({ inline: true }).end()
+      .use('ts').loader('ts-loader').options({ transpileOnly: true })
 
     config.plugin('TS').use(ForkTsCheckerWebpackPlugin)
   }
