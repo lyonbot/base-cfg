@@ -1,4 +1,9 @@
 import './index.css'
 
-const foobar = { a: 234 }
-alert(foobar.a)
+async function amazingTest(){
+  const foo = await (await fetch('xxx')).text()
+  if (/^\d+$/.test(foo)) await fetch('yyy')
+  return foo
+}
+
+amazingTest()

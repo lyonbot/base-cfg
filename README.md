@@ -81,7 +81,7 @@ module.exports = cfg;
 ```sh
 npm i -D \
   postcss postcss-loader autoprefixer cssnano \
-  @babel/core @babel/preset-env babel-loader
+  @babel/core @babel/preset-env @babel/plugin-transform-runtime @babel/runtime babel-loader
 
 >postcss.config.js      cat <<EOF
 module.exports = {
@@ -95,6 +95,7 @@ EOF
 >babel.config.js        cat <<EOF
 module.exports = {
   presets: ["@babel/preset-env"],
+  plugins: ["@babel/plugin-transform-runtime"],
 };
 EOF
 ```

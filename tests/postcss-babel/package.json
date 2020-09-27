@@ -12,7 +12,9 @@
   "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.11.6",
+    "@babel/plugin-transform-runtime": "^7.11.5",
     "@babel/preset-env": "^7.11.5",
+    "@babel/runtime": "^7.11.2",
     "@lyonbot/base-cfg": "file:../..",
     "autoprefixer": "^10.0.1",
     "babel-loader": "^8.1.0",
