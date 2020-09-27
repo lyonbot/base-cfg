@@ -12,7 +12,8 @@
   },
   "devDependencies": {
     "@lyonbot/base-cfg": "^1.0.0"
-  }
+  },
+  "browserslist": "> 0.5%, last 2 versions, Firefox ESR, not dead"
 }
 ```
 
@@ -32,8 +33,13 @@ const { makeConfig } = require('@lyonbot/base-cfg/webpack-config')
 
 const cfg = makeConfig({ 
   entry: { index: './src/index' },
-})
-module.exports = cfg
+  
+  extractCss: true,
+  enableHTML: true,
+  htmlPages: { index: ['index'] },
+});
+
+module.exports = cfg;
 ```
 
 ## typescript
@@ -61,4 +67,34 @@ module.exports = cfg
     "./src/**/*.tsx",
   ]
 }
+```
+
+## 使用 postcss 和 babel
+
+首先你需要在 package.json 里设置 [browserslist](https://github.com/browserslist/browserslist#readme)，例如：
+
+- `"browserslist": "Android >= 4.4, iOS >= 8",`
+- `"browserslist": "> 1%, IE 10",`
+
+然后执行命令即可：
+
+```sh
+npm i -D \
+  postcss postcss-loader autoprefixer cssnano \
+  @babel/core @babel/preset-env babel-loader
+
+>postcss.config.js      cat <<EOF
+module.exports = {
+  plugins: [
+    require('autoprefixer'),
+    require('cssnano')({ preset: 'default' }),
+  ]
+}
+EOF
+
+>babel.config.js        cat <<EOF
+module.exports = {
+  presets: ["@babel/preset-env"],
+};
+EOF
 ```

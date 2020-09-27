@@ -3,8 +3,20 @@
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const webpack = require('webpack');
 const path = require('path');
+const fs = require('fs');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const WebpackConfig = require('webpack-chain');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+function tryResolve(id) {
+  try {
+    return require.resolve(id, { paths: [process.cwd()] })
+  } catch (e) {
+    console.log("id", id, e)
+    return undefined
+  }
+}
 
 function arrayify(data) {
   if (!data) return []
@@ -19,8 +31,17 @@ function makeConfigChain({
   outDir = path.resolve(process.cwd(), 'dist'),
   publicPath = '/dist/',
 
-  enableTypeScript = true,
+  filename = isDevelopment ? '[name]' : '[name].[chunkhash:6]',
+  extractCss = true,
+
+  enableHTML = false,
+  htmlTemplate = '',  // <html>....</html>
+  htmlPages = { index: ['index'] },
+
+  enableTypeScript = fs.existsSync('tsconfig.json'),
   enableVue = true,
+  enablePostCSS = !!tryResolve('postcss-loader'),
+  enableBabel = !!tryResolve('babel-loader'),
 } = {}) {
   const config = new WebpackConfig()
 
@@ -35,7 +56,7 @@ function makeConfigChain({
   config.output
     .publicPath(publicPath)
     .path(outDir)
-    .filename('[name].js')
+    .filename(`${filename}.js`)
 
   config.resolve.extensions.merge(['.js', '.jsx', '.json'])
   config.resolve.alias.set('~', srcDir)
@@ -45,6 +66,9 @@ function makeConfigChain({
     path.resolve(__dirname, 'node_modules'),
   ])
 
+  config.module.rule('JS')
+    .test(/\.jsx?$/i)
+
   config.module.rule('SASS')
     .test(/\.s[ac]ss$/i)
     .use('style').loader('style-loader').end()
@@ -52,7 +76,7 @@ function makeConfigChain({
     .use('sass').loader('sass-loader').options({ implementation: require('sass') }).end()
 
   config.module.rule('FILE')
-    .test(/\.(png|jpg|gif|ttf|woff2?|otf)$/i)
+    .test(/\.(png|jpg|gif|ttf|woff2?|otf|mp4|mp3|ogg|m4a|webp|webm)$/i)
     .use('file').loader('file-loader').end()
 
   config.module.rule('TXT')
@@ -65,11 +89,9 @@ function makeConfigChain({
     .use('css').loader('css-loader').end()
 
   config.module.rule('WORKER JS')
-    .after('JS')
+    .before('JS')
     .test(/\.worker\.jsx?$/)
     .use('worker').loader('worker-loader').options({ inline: true }).end()
-
-
 
   config.plugin('DEFINE').use(webpack.DefinePlugin, [{
     'process.env.NODE_ENV': isDevelopment ? '"development"' : '"production"',
@@ -111,7 +133,7 @@ function makeConfigChain({
       .use('worker').loader('worker-loader').options({ inline: true }).end()
       .use('ts').loader('ts-loader').options({ transpileOnly: true })
 
-    config.plugin('TS').use(ForkTsCheckerWebpackPlugin)
+    config.plugin('ForkTsCheckerWebpackPlugin').use(ForkTsCheckerWebpackPlugin)
   }
 
   if (enableVue) {
@@ -120,7 +142,67 @@ function makeConfigChain({
       .test(/\.vue$/i)
       .use('vue').loader('vue-loader')
 
-    config.plugin('VUE').use(VueLoaderPlugin)
+    config.plugin('VueLoaderPlugin').use(VueLoaderPlugin)
+  }
+
+  if (enableBabel) {
+    config.module.rule('JS')
+      .use('babel').loader('babel-loader').end()
+
+    config.module.rule('WORKER JS')
+      .use('babel').loader('babel-loader').before('worker').end()
+
+    if (enableTypeScript) {
+      config.module.rule('TS')
+        .use('babel').loader('babel-loader').before('ts').end()
+
+      config.module.rule('WORKER TS')
+        .use('babel').loader('babel-loader').before('worker').end()
+    }
+  }
+
+  if (enablePostCSS) {
+    config.module.rule('SASS')
+      .use('postcss').loader('postcss-loader').after('css').end()
+
+    config.module.rule('CSS')
+      .use('postcss').loader('postcss-loader').after('css').end()
+  }
+
+  if (extractCss) {
+    config.module.rule('SASS')
+      .uses.delete('style').end()
+      .use('MiniCssExtractPlugin').before('css').loader(MiniCssExtractPlugin.loader).end()
+
+    config.module.rule('CSS')
+      .uses.delete('style').end()
+      .use('MiniCssExtractPlugin').before('css').loader(MiniCssExtractPlugin.loader).end()
+
+    config.plugin('MiniCssExtractPlugin').use(MiniCssExtractPlugin, [{ filename: `${filename}.css` }])
+  }
+
+  if (enableHTML) {
+    Object.keys(htmlPages).forEach(id => {
+      config.plugin('html:' + id).use(
+        HtmlWebpackPlugin,
+        [{
+          filename: `${id}.html`,
+          chunks: htmlPages[id],
+          ...htmlTemplate ? { templateContent: htmlTemplate } : {},
+        }]
+      )
+    })
+  }
+
+  // postprocess
+
+  {
+    // delete empty rules
+    for (const [id, rule] of Object.entries(config.module.rules.entries())) {
+      if (rule.uses.values().length === 0) {
+        config.module.rules.delete(id)
+      }
+    }
   }
 
   return config

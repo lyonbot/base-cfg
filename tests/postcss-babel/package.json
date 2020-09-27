@@ -1,0 +1,23 @@
+{
+  "name": "name",
+  "description": "description",
+  "authors": "author",
+  "version": "1.0.0",
+  "main": "pathToMain",
+  "scripts": {
+    "build": "webpack",
+    "dev": "webpack-dev-server --development"
+  },
+  "browserslist": "Android >= 4.4, iOS >= 8",
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.11.6",
+    "@babel/preset-env": "^7.11.5",
+    "@lyonbot/base-cfg": "file:../..",
+    "autoprefixer": "^10.0.1",
+    "babel-loader": "^8.1.0",
+    "cssnano": "^4.1.10",
+    "postcss": "^8.1.0",
+    "postcss-loader": "^4.0.2"
+  }
+}

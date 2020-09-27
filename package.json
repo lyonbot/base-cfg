@@ -1,6 +1,6 @@
 {
   "name": "@lyonbot/base-cfg",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "个人的常用 webpack 和 typescript 配置的东西",
   "main": "index.js",
   "types": "./shim.d.ts",
@@ -14,6 +14,8 @@
     "css-loader": "^3.2.0",
     "file-loader": "^5.0.2",
     "fork-ts-checker-webpack-plugin": "^5.0.1",
+    "html-webpack-plugin": "^4.5.0",
+    "mini-css-extract-plugin": "^0.11.2",
     "raw-loader": "^4.0.0",
     "sass": "^1.23.7",
     "sass-loader": "^8.0.0",
