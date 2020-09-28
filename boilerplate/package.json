@@ -8,9 +8,9 @@
     "build": "webpack",
     "dev": "webpack-dev-server --development"
   },
+  "browserslist": "chrome >= 42, iOS >= 8",
   "dependencies": {},
   "devDependencies": {
     "@lyonbot/base-cfg": "^1.0.0"
-  },
-  "browserslist": "> 0.5%, last 2 versions, Firefox ESR, not dead"
+  }
 }

@@ -8,8 +8,10 @@
     "build": "webpack",
     "dev": "webpack-dev-server --development"
   },
-  "browserslist": "Android >= 4.4, iOS >= 8",
-  "dependencies": {},
+  "browserslist": "chrome >= 42, iOS >= 8",
+  "dependencies": {
+    "core-js": "^3.6.5"
+  },
   "devDependencies": {
     "@babel/core": "^7.11.6",
     "@babel/plugin-transform-runtime": "^7.11.5",

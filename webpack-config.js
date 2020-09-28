@@ -31,12 +31,17 @@ function makeConfigChain({
   outDir = path.resolve(process.cwd(), 'dist'),
   publicPath = '/dist/',
 
-  filename = isDevelopment ? '[name]' : '[name].[chunkhash:6]',
+  filename = isDevelopment ? '[name]' : '[name].[contenthash:6]',
   extractCss = true,
+  define = {},
+
+  splitChunks = 'async',  // or 'all'
 
   enableHTML = false,
   htmlTemplate = '',  // <html>....</html>
   htmlPages = { index: ['index'] },
+
+  babelExclude = /node_modules/,
 
   enableTypeScript = fs.existsSync('tsconfig.json'),
   enableVue = true,
@@ -67,7 +72,8 @@ function makeConfigChain({
   ])
 
   config.module.rule('JS')
-    .test(/\.jsx?$/i)
+    .test(/\.m?jsx?$/i)
+    .exclude.add(/node_modules/)
 
   config.module.rule('SASS')
     .test(/\.s[ac]ss$/i)
@@ -88,19 +94,19 @@ function makeConfigChain({
     .use('style').loader('style-loader').end()
     .use('css').loader('css-loader').end()
 
-  config.module.rule('WORKER JS')
-    .before('JS')
-    .test(/\.worker\.jsx?$/)
+  config.module.rule('WORKER')
+    .test(/\.worker\.[jt]sx?$/)
     .use('worker').loader('worker-loader').options({ inline: true }).end()
 
   config.plugin('DEFINE').use(webpack.DefinePlugin, [{
     'process.env.NODE_ENV': isDevelopment ? '"development"' : '"production"',
+    ...define,
   }])
 
 
 
   config.optimization.splitChunks({
-    chunks: 'async',
+    chunks: splitChunks,
     minSize: 30000,
     maxSize: 0,
     minChunks: 1,
@@ -124,13 +130,8 @@ function makeConfigChain({
   if (enableTypeScript) {
     config.resolve.extensions.merge(['.ts', '.tsx'])
     config.module.rule('TS')
+      .before('WORKER')
       .test(/\.tsx?$/i)
-      .use('ts').loader('ts-loader').options({ transpileOnly: true })
-
-    config.module.rule('WORKER TS')
-      .after('TS')
-      .test(/\.worker\.tsx?$/)
-      .use('worker').loader('worker-loader').options({ inline: true }).end()
       .use('ts').loader('ts-loader').options({ transpileOnly: true })
 
     config.plugin('ForkTsCheckerWebpackPlugin').use(ForkTsCheckerWebpackPlugin)
@@ -146,18 +147,14 @@ function makeConfigChain({
   }
 
   if (enableBabel) {
-    config.module.rule('JS')
+    const babelRule = config.module.rule('BABEL')
+
+    babelRule
+      .test(/\.m?[jt]sx?$/i)
       .use('babel').loader('babel-loader').end()
 
-    config.module.rule('WORKER JS')
-      .use('babel').loader('babel-loader').before('worker').end()
-
-    if (enableTypeScript) {
-      config.module.rule('TS')
-        .use('babel').loader('babel-loader').before('ts').end()
-
-      config.module.rule('WORKER TS')
-        .use('babel').loader('babel-loader').before('worker').end()
+    if (babelExclude) {
+      babelRule.exclude.add(babelExclude)
     }
   }
 

@@ -73,15 +73,23 @@ module.exports = cfg;
 
 首先你需要在 package.json 里设置 [browserslist](https://github.com/browserslist/browserslist#readme)，例如：
 
-- `"browserslist": "Android >= 4.4, iOS >= 8",`
+- `"browserslist": "chrome >= 42, iOS >= 8",`
 - `"browserslist": "> 1%, IE 10",`
+- `"browserslist": "> 0.5%, last 2 versions, Firefox ESR, not dead",`
+
+然后如果需要，`npm i core-js` 并在入口文件里补充：
+
+```js
+import "/stable";
+```
 
 然后执行命令即可：
 
 ```sh
+npm i --save core-js
 npm i -D \
   postcss postcss-loader autoprefixer cssnano \
-  @babel/core @babel/preset-env @babel/plugin-transform-runtime @babel/runtime babel-loader
+  @babel/core @babel/preset-env @babel/plugin-transform-runtime @babel/plugin-transform-modules-commonjs @babel/runtime babel-loader
 
 >postcss.config.js      cat <<EOF
 module.exports = {
@@ -94,8 +102,36 @@ EOF
 
 >babel.config.js        cat <<EOF
 module.exports = {
-  presets: ["@babel/preset-env"],
-  plugins: ["@babel/plugin-transform-runtime"],
+  presets: [
+    ["@babel/preset-env", {
+      corejs: 3,
+      useBuiltIns: 'usage'
+    }]
+  ],
+  plugins: [
+    "@babel/plugin-transform-runtime",
+    // "@babel/plugin-transform-modules-commonjs",
+  ],
 };
 EOF
+```
+
+## 生成HTML页面
+
+在 makeConfig 的时候加入参数即可
+
+```yml
+  enableHTML: true,
+  htmlPages: { index: ['index'] },
+  htmlTemplate: `<!doctype html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>UICore</title>
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+    </head>
+    <body>
+      <div id="app"></div>
+    </body>
+    </html>`,
 ```
