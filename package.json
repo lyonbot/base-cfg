@@ -1,6 +1,6 @@
 {
   "name": "@lyonbot/base-cfg",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "个人的常用 webpack 和 typescript 配置的东西",
   "main": "index.js",
   "types": "./shim.d.ts",
