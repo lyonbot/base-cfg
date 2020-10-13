@@ -82,7 +82,7 @@ function makeConfigChain({
     .use('sass').loader('sass-loader').options({ implementation: require('sass') }).end()
 
   config.module.rule('FILE')
-    .test(/\.(png|jpg|gif|ttf|woff2?|otf|mp4|mp3|ogg|m4a|webp|webm)$/i)
+    .test(/\.(png|jpg|gif|ttf|woff2?|eot|svg|otf|bin|mp4|mp3|ogg|m4a|webp|webm)$/i)
     .use('file').loader('file-loader').end()
 
   config.module.rule('TXT')
