@@ -33,6 +33,7 @@ function makeConfigChain({
 
   filename = isDevelopment ? '[name]' : '[name].[contenthash:6]',
   extractCss = true,
+  urlLoaderLimit = 8192,
   define = {},
 
   splitChunks = 'async',  // or 'all'
@@ -83,7 +84,8 @@ function makeConfigChain({
 
   config.module.rule('FILE')
     .test(/\.(png|jpg|gif|ttf|woff2?|eot|svg|otf|bin|mp4|mp3|ogg|m4a|webp|webm)$/i)
-    .use('file').loader('file-loader').end()
+    .use('url').loader('url-loader').options({ limit: urlLoaderLimit, fallback: 'file-loader' }).end()
+  // .use('file').loader('file-loader').end()
 
   config.module.rule('TXT')
     .test(/\.txt$/i)
