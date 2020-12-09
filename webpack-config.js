@@ -13,7 +13,6 @@ function tryResolve(id) {
   try {
     return require.resolve(id, { paths: [process.cwd()] })
   } catch (e) {
-    console.log("id", id, e)
     return undefined
   }
 }
@@ -33,6 +32,7 @@ function makeConfigChain({
 
   filename = isDevelopment ? '[name]' : '[name].[contenthash:6]',
   extractCss = true,
+  extractCssPublicPath = publicPath,
   urlLoaderLimit = 8192,
   define = {},
 
@@ -169,13 +169,21 @@ function makeConfigChain({
   }
 
   if (extractCss) {
+    const miniCssExtractLoaderOptions = {
+      publicPath: extractCssPublicPath
+    }
+
     config.module.rule('SASS')
       .uses.delete('style').end()
-      .use('MiniCssExtractPlugin').before('css').loader(MiniCssExtractPlugin.loader).end()
+      .use('MiniCssExtractPlugin').before('css')
+      .loader(MiniCssExtractPlugin.loader)
+      .options(miniCssExtractLoaderOptions).end()
 
     config.module.rule('CSS')
       .uses.delete('style').end()
-      .use('MiniCssExtractPlugin').before('css').loader(MiniCssExtractPlugin.loader).end()
+      .use('MiniCssExtractPlugin').before('css')
+      .loader(MiniCssExtractPlugin.loader)
+      .options(miniCssExtractLoaderOptions).end()
 
     config.plugin('MiniCssExtractPlugin').use(MiniCssExtractPlugin, [{ filename: `${filename}.css` }])
   }
