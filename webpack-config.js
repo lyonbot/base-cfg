@@ -45,12 +45,18 @@ function makeConfigChain({
   babelExclude = /node_modules/,
 
   enableTypeScript = fs.existsSync('tsconfig.json'),
+  typeScriptTranspileOnly = true,
+  typeScriptCheck = true,
+
   enableVue = true,
   enablePostCSS = !!tryResolve('postcss-loader'),
   enableBabel = !!tryResolve('babel-loader'),
 } = {}) {
   const config = new WebpackConfig()
 
+  config.stats({
+    children: false,    // https://github.com/webpack-contrib/mini-css-extract-plugin/issues/168
+  })
   config.mode(isDevelopment ? 'development' : 'production')
   config.devtool(isDevelopment ? 'eval-cheap-source-map' : 'cheap-source-map')
 
@@ -72,15 +78,33 @@ function makeConfigChain({
     path.resolve(__dirname, 'node_modules'),
   ])
 
+  // define all loaders. the latter loader processes files first!
+
+  // -------------------------- JavaScript & TypeScript ------------------------
+
+  config.module.rule('WORKER')
+    .test(/\.worker\.[jt]sx?$/)
+    .use('worker').loader('worker-loader').options({ inline: true }).end()
+
   config.module.rule('JS')
     .test(/\.m?jsx?$/i)
     .exclude.add(/node_modules/)
 
-  config.module.rule('SASS')
-    .test(/\.s[ac]ss$/i)
+  // -------------------------- Stylesheets ------------------------
+
+  config.module.rule('STYLE-OUTPUT')
+    .test(/\.s[ac]ss$|\.css$/i)
     .use('style').loader('style-loader').end()
     .use('css').loader('css-loader').end()
+
+  config.module.rule('CSS')
+    .test(/\.css$/i)
+
+  config.module.rule('SASS')
+    .test(/\.s[ac]ss$/i)
     .use('sass').loader('sass-loader').options({ implementation: require('sass') }).end()
+
+  // -------------------------- Files ------------------------
 
   config.module.rule('FILE')
     .test(/\.(png|jpg|gif|ttf|woff2?|eot|svg|otf|bin|mp4|mp3|ogg|m4a|webp|webm)$/i)
@@ -91,14 +115,7 @@ function makeConfigChain({
     .test(/\.txt$/i)
     .use('raw').loader('raw-loader').end()
 
-  config.module.rule('CSS')
-    .test(/\.css$/i)
-    .use('style').loader('style-loader').end()
-    .use('css').loader('css-loader').end()
-
-  config.module.rule('WORKER')
-    .test(/\.worker\.[jt]sx?$/)
-    .use('worker').loader('worker-loader').options({ inline: true }).end()
+  // --------------------------------------------------
 
   config.plugin('DEFINE').use(webpack.DefinePlugin, [{
     'process.env.NODE_ENV': isDevelopment ? '"development"' : '"production"',
@@ -132,11 +149,11 @@ function makeConfigChain({
   if (enableTypeScript) {
     config.resolve.extensions.merge(['.ts', '.tsx'])
     config.module.rule('TS')
-      .before('WORKER')
+      .after('JS')
       .test(/\.tsx?$/i)
-      .use('ts').loader('ts-loader').options({ transpileOnly: true })
+      .use('ts').loader('ts-loader').options({ transpileOnly: typeScriptTranspileOnly })
 
-    config.plugin('ForkTsCheckerWebpackPlugin').use(ForkTsCheckerWebpackPlugin)
+    if (typeScriptTranspileOnly && typeScriptCheck) config.plugin('ForkTsCheckerWebpackPlugin').use(ForkTsCheckerWebpackPlugin)
   }
 
   if (enableVue) {
@@ -149,7 +166,7 @@ function makeConfigChain({
   }
 
   if (enableBabel) {
-    const babelRule = config.module.rule('BABEL')
+    const babelRule = config.module.rule('BABEL').after('JS')
 
     babelRule
       .test(/\.m?[jt]sx?$/i)
@@ -161,11 +178,8 @@ function makeConfigChain({
   }
 
   if (enablePostCSS) {
-    config.module.rule('SASS')
-      .use('postcss').loader('postcss-loader').after('css').end()
-
-    config.module.rule('CSS')
-      .use('postcss').loader('postcss-loader').after('css').end()
+    config.module.rule('STYLE-OUTPUT')
+      .use('postcss').after('css').loader('postcss-loader').end()
   }
 
   if (extractCss) {
@@ -173,17 +187,13 @@ function makeConfigChain({
       publicPath: extractCssPublicPath
     }
 
-    config.module.rule('SASS')
-      .uses.delete('style').end()
+    config.module.rule('STYLE-OUTPUT')
       .use('MiniCssExtractPlugin').before('css')
       .loader(MiniCssExtractPlugin.loader)
       .options(miniCssExtractLoaderOptions).end()
 
-    config.module.rule('CSS')
-      .uses.delete('style').end()
-      .use('MiniCssExtractPlugin').before('css')
-      .loader(MiniCssExtractPlugin.loader)
-      .options(miniCssExtractLoaderOptions).end()
+    config.module.rule('STYLE-OUTPUT')
+      .uses.delete('style')
 
     config.plugin('MiniCssExtractPlugin').use(MiniCssExtractPlugin, [{ filename: `${filename}.css` }])
   }
@@ -199,17 +209,6 @@ function makeConfigChain({
         }]
       )
     })
-  }
-
-  // postprocess
-
-  {
-    // delete empty rules
-    for (const [id, rule] of Object.entries(config.module.rules.entries())) {
-      if (rule.uses.values().length === 0) {
-        config.module.rules.delete(id)
-      }
-    }
   }
 
   return config
